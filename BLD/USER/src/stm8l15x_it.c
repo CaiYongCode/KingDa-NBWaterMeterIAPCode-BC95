@@ -105,14 +105,11 @@ INTERRUPT_HANDLER(DMA1_CHANNEL2_3_IRQHandler,3)
   */
 INTERRUPT_HANDLER(RTC_CSSLSE_IRQHandler,4)
 {
+  Wake_Interrupt();//唤醒中断服务函数
+ // Alarm_Interrupt ();//闹钟中断服务函数
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-    Wake_Interrupt();//唤醒中断服务函数
-    Alarm_Interrupt ();//闹钟中断服务函数
-  
-    SysTick_Handler();
-
 }
 /**
   * @brief External IT PORTE/F and PVD Interrupt routine.
@@ -158,11 +155,10 @@ INTERRUPT_HANDLER(EXTID_H_IRQHandler,7)
   */
 INTERRUPT_HANDLER(EXTI0_IRQHandler,8)
 {
+  Exti0_Interrupt();
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-    Exti0_Interrupt();
-
 }
 
 /**
@@ -290,11 +286,10 @@ INTERRUPT_HANDLER(ADC1_COMP_IRQHandler,18)
   */
 INTERRUPT_HANDLER(TIM2_UPD_OVF_TRG_BRK_USART2_TX_IRQHandler,19)
 {
+  USART2_TX_IRQHandler();
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-    USART2_TX_IRQHandler();
-
 }
 
 /**
@@ -324,7 +319,6 @@ INTERRUPT_HANDLER(TIM3_UPD_OVF_TRG_BRK_USART3_TX_IRQHandler,21)
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-    USART3_TX_IRQHandler(); 
 
 }
 /**
@@ -337,7 +331,6 @@ INTERRUPT_HANDLER(TIM3_CC_USART3_RX_IRQHandler,22)
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-    USART3_IRQHandler();
 
 }
 /**

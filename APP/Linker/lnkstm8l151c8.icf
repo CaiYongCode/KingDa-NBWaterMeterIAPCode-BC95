@@ -16,14 +16,19 @@ define region Eeprom = [from 0x1000 to 0x17FF];
 
 define region BootROM = [from 0x6000 to 0x67FF];
 
-define region NearFuncCode = [from 0xE000 to 0x17FFF];
+define region NearFuncCode = [from 0xD000 to 0x17FFF];
 
-define region FarFuncCode = [from 0xE000 to 0xFFFF]
+define region FarFuncCode = [from 0xD000 to 0xFFFF]
                           | [from 0x10000 to 0x17FFF];
 
-define region HugeFuncCode = [from 0xE000 to 0x17FFF];
+define region HugeFuncCode = [from 0xD000 to 0x17FFF];
 
-
+//define region NearFuncCode = [from 0x8000 to 0x17FFF];
+//
+//define region FarFuncCode = [from 0x8000 to 0xFFFF]
+//                          | [from 0x10000 to 0x17FFF];
+//
+//define region HugeFuncCode = [from 0x8000 to 0x17FFF];
 /////////////////////////////////////////////////////////////////
 
 define block CSTACK with size = _CSTACK_SIZE  {};

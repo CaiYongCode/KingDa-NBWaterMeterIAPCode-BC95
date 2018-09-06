@@ -152,7 +152,7 @@
         <option>
           <name>IccOptStrategy</name>
           <version>0</version>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IccOptLevelSlave</name>
@@ -483,7 +483,7 @@
         <option>
           <name>OOCOutputFormat</name>
           <version>2</version>
-          <state>1</state>
+          <state>2</state>
         </option>
         <option>
           <name>OCOutputOverride</name>
@@ -491,7 +491,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>project.hex</state>
+          <state>project.bin</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -813,7 +813,7 @@
         <debug>0</debug>
         <option>
           <name>GenDeviceSelectMenu</name>
-          <state></state>
+          <state>UnspecifiedSTM8	STM8 - Unspecified</state>
         </option>
         <option>
           <name>GenCodeModel</name>
@@ -857,7 +857,7 @@
         </option>
         <option>
           <name>GenRTConfigPath</name>
-          <state></state>
+          <state>$TOOLKIT_DIR$\LIB\dlstm8smn.h</state>
         </option>
         <option>
           <name>GenLibInFormatter</name>
@@ -952,12 +952,12 @@
         </option>
         <option>
           <name>IccOptLevelSlave</name>
-          <state>1</state>
+          <state>3</state>
         </option>
         <option>
           <name>IccOptAllowList</name>
           <version>0</version>
-          <state>111110</state>
+          <state>111111</state>
         </option>
         <option>
           <name>IccGenerateDebugInfo</name>
@@ -965,7 +965,7 @@
         </option>
         <option>
           <name>IccOutputFile</name>
-          <state></state>
+          <state>$FILE_BNAME$.o</state>
         </option>
         <option>
           <name>IccCodeModel</name>
@@ -1339,7 +1339,7 @@
         </option>
         <option>
           <name>IlinkOutputFile</name>
-          <state>###Unitialized###</state>
+          <state>project.out</state>
         </option>
         <option>
           <name>IlinkDebugInfoEnable</name>
@@ -1597,13 +1597,13 @@
       <name>$PROJ_DIR$\..\BSP\src\BC95.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\BSP\src\mcu_init.c</name>
+      <name>$PROJ_DIR$\..\BSP\src\Pulse_Acquire.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\BSP\src\Sys_Timer.c</name>
+      <name>$PROJ_DIR$\..\BSP\src\rtc.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\BSP\src\Temperature.c</name>
+      <name>$PROJ_DIR$\..\BSP\src\uart.c</name>
     </file>
   </group>
   <group>
@@ -1614,9 +1614,6 @@
   </group>
   <group>
     <name>LIB</name>
-    <file>
-      <name>$PROJ_DIR$\..\LIB\src\stm8l15x_adc.c</name>
-    </file>
     <file>
       <name>$PROJ_DIR$\..\LIB\src\stm8l15x_clk.c</name>
     </file>
@@ -1649,6 +1646,12 @@
     </file>
   </group>
   <group>
+    <name>LINKER</name>
+    <file>
+      <name>$PROJ_DIR$\..\Linker\lnkstm8l151c8.icf</name>
+    </file>
+  </group>
+  <group>
     <name>USER</name>
     <file>
       <name>$PROJ_DIR$\..\USER\src\Globaldata.c</name>
@@ -1657,10 +1660,7 @@
       <name>$PROJ_DIR$\..\USER\src\main.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\USER\src\Pulse_Acquire.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\USER\src\rtc.c</name>
+      <name>$PROJ_DIR$\..\USER\src\mcu_init.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\USER\src\Save.c</name>
@@ -1669,7 +1669,7 @@
       <name>$PROJ_DIR$\..\USER\src\stm8l15x_it.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\USER\src\uart.c</name>
+      <name>$PROJ_DIR$\..\USER\src\Sys_Timer.c</name>
     </file>
   </group>
 </project>

@@ -107,8 +107,6 @@ INTERRUPT_HANDLER(RTC_CSSLSE_IRQHandler,4)
 {
   Wake_Interrupt();//唤醒中断服务函数
   Alarm_Interrupt ();//闹钟中断服务函数
-  
-  SysTick_Handler();
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
@@ -170,7 +168,6 @@ INTERRUPT_HANDLER(EXTI0_IRQHandler,8)
   */
 INTERRUPT_HANDLER(EXTI1_IRQHandler,9)
 {
- // exti1_interrupt();
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
@@ -207,7 +204,6 @@ INTERRUPT_HANDLER(EXTI3_IRQHandler,11)
   */
 INTERRUPT_HANDLER(EXTI4_IRQHandler,12)
 {
- // exti4_interrupt();
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
@@ -305,19 +301,11 @@ INTERRUPT_HANDLER(TIM2_UPD_OVF_TRG_BRK_USART2_TX_IRQHandler,19)
 //u8 Uart2_buff[256] = {0};
 INTERRUPT_HANDLER(TIM2_CC_USART2_RX_IRQHandler,20)
 {
-  USART2_IRQHandler();
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
+    USART2_IRQHandler();
 
-//  u8 Res;
-//
-//  if(USART_GetITStatus(USART2,USART_IT_RXNE) == SET)  //接收中断(接收到的数据必须是0x0d 0x0a结尾)
-//  {
-//      Uart2_buff[Uart2_RX_CNT ++] = USART_ReceiveData8(USART2);//(USART1->DR);//读取接收到的数据
-//      USART_ClearITPendingBit(USART2,USART_IT_RXNE);//清空中断标志位
-//   }   
-  
 }
 
 
@@ -328,10 +316,10 @@ INTERRUPT_HANDLER(TIM2_CC_USART2_RX_IRQHandler,20)
   */
 INTERRUPT_HANDLER(TIM3_UPD_OVF_TRG_BRK_USART3_TX_IRQHandler,21)
 {
-    USART3_TX_IRQHandler(); 
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
+//  USART3_TX_IRQHandler();
 }
 /**
   * @brief Timer3 Capture/Compare /USART3 RX Interrupt routine.
@@ -339,11 +327,11 @@ INTERRUPT_HANDLER(TIM3_UPD_OVF_TRG_BRK_USART3_TX_IRQHandler,21)
   * @retval None
   */
 INTERRUPT_HANDLER(TIM3_CC_USART3_RX_IRQHandler,22)
-{
-    USART3_IRQHandler();
+{    
     /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
+ // USART3_IRQHandler();
 }
 /**
   * @brief TIM1 Update/Overflow/Trigger/Commutation Interrupt routine.

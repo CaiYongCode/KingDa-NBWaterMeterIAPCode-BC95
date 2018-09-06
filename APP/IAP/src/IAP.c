@@ -21,8 +21,8 @@
 /*********************************************************************************
 私有变量定义区
 *********************************************************************************/ 
-//#pragma location=0x0F80
-//uint32_t Vector_Table[32];
+struct Upgrade_Str Upgrade;
+unsigned char APPValid;
 /*********************************************************************************
 测试变量定义区
 *********************************************************************************/
@@ -62,23 +62,23 @@ void STM8_Interrupt_Vector_Table_Redirection(void)
   uint32_t data = 0;
  
   FLASH_Unlock(FLASH_MemType_Program);
-  for(Index = 1; Index < 0X20;Index++)
+  for(Index = 1; Index < 0x20;Index++)
   {
     data = EEPROM_ReadWord(INTERRUPT_VECTOR_ADD+4*Index);
-    FLASH_ProgramWord(0X8000+4*Index,data);
+    FLASH_ProgramWord(0x8000+4*Index,data);
   }
   FLASH_Lock(FLASH_MemType_Program);
 }
 /*********************************************************************************
  Function:      //
- Description:   //跳转到应用程序运行
+ Description:   //跳转到引导程序运行
  Input:         //
                 //
  Output:        //
  Return:      	//
  Others:        //
 *********************************************************************************/
-void JumptoAPP(void)
+void JumptoBLD(void)
 {
   sim();               // disable interrupts，建议程序跳转前关中断，跳转到新程序后先清一次中断。
   asm("LDW X,  SP ");
@@ -96,47 +96,133 @@ void JumptoAPP(void)
  Return:      	//
  Others:        //
 *********************************************************************************/
+unsigned char buff[256] = {0};
+void Upgrade_Process(unsigned char *str)
+{
+  unsigned short i = 0,j = 0;
+
+  unsigned char MessageID = 0;
+  unsigned short crc16 = 0;
+  unsigned short len = 0;
+  unsigned short DataLength = 0;
+  
+  i = 6;
+  while(str[i] != ',')
+  {
+    if( (str[i] >= '0')&&(str[i] <= '9') )
+    {
+      DataLength = DataLength*10+ASCLL_to_Int(str[i]);
+    }
+    i++;
+  }
+ 
+  for(j = 0;j < DataLength;j++)
+  {
+    buff[j] = ASCLL_to_Int(str[i+1+2*j])*16+ASCLL_to_Int(str[i+2+2*j]);
+  }
+
+  len = 8+buff[6]*256+buff[7];
+
+  crc16 = buff[4]*256+buff[5];
+  buff[4] = 0;
+  buff[5] = 0;
+  
+  //CRC16校验
+  if(crc16 != CRC16(buff,len))
+  {
+    return;
+  }    
+   
+  MessageID = buff[3];
+  switch(MessageID)
+  {
+    case MESSAGE19:            //查询设备版本
+      {
+        Save_Add_Flow(ADD_FLOW_ADD,&Cal.Water_Data);
+         
+        Upgrade.Flag = UPGRADE_VALID;
+        Save_Upgrade_Flag();
+        
+        STM8_Interrupt_Vector_Table_Redirection();
+        JumptoBLD();
+      }
+      break;
+    case MESSAGE20:           //新版本通知
+      {
+      } 
+      break;
+    case MESSAGE21:            //下发升级包
+      {
+      }
+      break;
+    case MESSAGE22:            //设备上报升级包下载状态，平台响应
+      {
+        
+      }
+      break;
+    case MESSAGE23:            //平台命令升级
+      {
+     
+      }
+      break;
+    case MESSAGE24:            //设备上报升级成功，平台响应
+      {
+        if(buff[8] == 0x00)     //平台处理成功
+        {
+          Upgrade.Flag = 0;
+          Save_Upgrade_Flag();
+          
+          BC95.Incident_Pend = TRUE;//标记挂起
+        }
+      }
+      break;
+    default:
+      break;
+  }
+}
 
 /*********************************************************************************
  Function:      //
- Description:   //
+ Description:   //设备上报升级结果
  Input:         //
                 //
  Output:        //
  Return:      	//
  Others:        //
 *********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:	    	//
- Others:        //
-*********************************************************************************/
-
+void SendUpgradeMessage24(void)
+{
+  unsigned char i = 0;
+  unsigned short crc16 = 0;
+  unsigned char version[11] = {0};
+  unsigned char buff[26] = {0};
+  uint8_t data[64] = "AT+NMGS=25,00000000000000000000000000000000000000000000000000\r\n";
+  
+  Read_Version(APP_VERSION_ADD,version);
+    
+  buff[0] = 0xFF;
+  buff[1] = 0xFE;
+  buff[2] = 0x01;
+  buff[3] = MESSAGE24;
+  buff[4] = 0;
+  buff[5] = 0;
+  buff[6] = 0;
+  buff[7] = 17;
+  buff[8] = 0x00;
+  memcpy(&buff[9],version,11);
+  
+  crc16 = CRC16(buff,25);
+  buff[4] = (crc16>>8)&0xFF;
+  buff[5] = crc16&0xFF;
+  
+  for(i = 0;i < 25;i++)    
+  {
+    data[11+2*i] = Int_to_ASCLL(buff[i]/0x10);
+    data[12+2*i] = Int_to_ASCLL(buff[i]%0x10);
+  }
+  
+  BC95_Data_Send(data,63);
+}
 /*********************************************************************************
  Function:      //
  Description:   //

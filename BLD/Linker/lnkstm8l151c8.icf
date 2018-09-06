@@ -16,12 +16,12 @@ define region Eeprom = [from 0x1000 to 0x17FF];
 
 define region BootROM = [from 0x6000 to 0x67FF];
 
-define region NearFuncCode = [from 0x8000 to 0xDFFF];
+define region NearFuncCode = [from 0x8000 to 0xCFFF];
 
-define region FarFuncCode = [from 0x8000 to 0xDFFF];
+define region FarFuncCode = [from 0x8000 to 0xCFFF];
 //                          | [from 0x10000 to 0x17FFF];
 
-define region HugeFuncCode = [from 0x8000 to 0xDFFF];
+define region HugeFuncCode = [from 0x8000 to 0xCFFF];
 
 
 /////////////////////////////////////////////////////////////////

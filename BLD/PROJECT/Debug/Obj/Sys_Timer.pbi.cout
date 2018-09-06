@@ -1,4 +1,4 @@
-"F:\0中科君达\0项目\NB水表\IAP\BLD\BSP\src\Sys_Timer.c"
+"F:\0中科君达\0项目\NB水表\IAP\BLD\USER\src\Sys_Timer.c"
 -std=c99
 -ferror-limit=100
 -I

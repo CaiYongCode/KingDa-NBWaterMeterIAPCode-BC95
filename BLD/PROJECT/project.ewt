@@ -1946,13 +1946,13 @@
       <name>$PROJ_DIR$\..\BSP\src\BC95.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\BSP\src\mcu_init.c</name>
+      <name>$PROJ_DIR$\..\BSP\src\Pulse_Acquire.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\BSP\src\Sys_Timer.c</name>
+      <name>$PROJ_DIR$\..\BSP\src\rtc.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\BSP\src\Temperature.c</name>
+      <name>$PROJ_DIR$\..\BSP\src\uart.c</name>
     </file>
   </group>
   <group>
@@ -1963,9 +1963,6 @@
   </group>
   <group>
     <name>LIB</name>
-    <file>
-      <name>$PROJ_DIR$\..\LIB\src\stm8l15x_adc.c</name>
-    </file>
     <file>
       <name>$PROJ_DIR$\..\LIB\src\stm8l15x_clk.c</name>
     </file>
@@ -1998,6 +1995,12 @@
     </file>
   </group>
   <group>
+    <name>LINKER</name>
+    <file>
+      <name>$PROJ_DIR$\..\Linker\lnkstm8l151c8.icf</name>
+    </file>
+  </group>
+  <group>
     <name>USER</name>
     <file>
       <name>$PROJ_DIR$\..\USER\src\Globaldata.c</name>
@@ -2006,10 +2009,7 @@
       <name>$PROJ_DIR$\..\USER\src\main.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\USER\src\Pulse_Acquire.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\USER\src\rtc.c</name>
+      <name>$PROJ_DIR$\..\USER\src\mcu_init.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\USER\src\Save.c</name>
@@ -2018,7 +2018,7 @@
       <name>$PROJ_DIR$\..\USER\src\stm8l15x_it.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\USER\src\uart.c</name>
+      <name>$PROJ_DIR$\..\USER\src\Sys_Timer.c</name>
     </file>
   </group>
 </project>
