@@ -50,12 +50,14 @@ void main(void)
 //  IWDG_INIT(); 
   enableInterrupts();                                       //开总中断
 /////////////////////////////////////////////////////////    
-  Read_Upgrade_Flag();                                  //读取升级标志位
+  Check_Version();                                      //验证APP版本
+  APPValid = APP_VALID;
+  Save_APP_Valid();                                     //保存APP程序有效标志
+  Read_Upgrade_Info();                                  //读取升级信息
   Read_ACUM_Flow(ADD_FLOW_ADD,&Cal.Water_Data);         //读取当前累积流量
   Read_Meter_Parameter();                               //读取水表参数
   Read_History_Save_Index();                            //读取历史数据保存索引
-  APPValid = APP_VALID;
-  Save_APP_Valid();
+  
 
   BC95.Report_Bit = 1;
   BC95.Start_Process = BC95_RECONNECT;
@@ -73,7 +75,8 @@ void main(void)
     if( BC95.FailTimes >= 2 )
     { 
       Save_Add_Flow(ADD_FLOW_ADD,&Cal.Water_Data);       //保存当前水量
-      WWDG->CR = 0x80;  //看门狗复位
+      Run_BLD();
+//      WWDG->CR = 0x80;  //看门狗复位
     }
     
     if(MeterParameter.DeviceStatus == SLEEP)     //设备进入睡眠状态
@@ -131,13 +134,23 @@ void IWDG_INIT(void)  //看门狗初始化
 }
 /*********************************************************************************
  Function:      //
- Description:   //
+ Description:   //验证APP版本
  Input:         //
                 //
  Output:        //
  Return:      	//
  Others:        //
 *********************************************************************************/
+void Check_Version(void)
+{
+  unsigned char APPVersion[11] = {0};
+  
+  Read_Version(APP_VERSION_ADD,APPVersion);
+  if(strstr((char const*)APPVersion,"NB_APP_V") == NULL)
+  {
+    Save_Version(APP_VERSION_ADD,"NB_APP_V1.0");
+  }
+}
 /*********************************************************************************
  Function:      //
  Description:   //

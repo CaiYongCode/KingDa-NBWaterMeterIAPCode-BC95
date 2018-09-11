@@ -14,30 +14,32 @@
 /*********************************************************************************************************
 宏定义区
 *********************************************************************************************************/
+#define UPGRADE_TIMEOUT_MAX     3
 /*********************************************************************************************************
 数据类型定义
 *********************************************************************************************************/
 enum Upgrade_Process
 {
-  START,
+  IDLE,
   MESSAGE19 = 19,
   MESSAGE20 = 20,
   MESSAGE21 = 21,
   MESSAGE22 = 22,
   MESSAGE23 = 23,
   MESSAGE24 = 24,
-  FINISH,
-  FAIL,
 };
 struct Upgrade_Str//BC95 总结构体
 {
-  unsigned char Flag;   //升级标志
   bool Incident_Pend;//事件挂起标志
-  enum Upgrade_Process Process;
+  unsigned char TimeoutCounter; //超时计数
+  enum Upgrade_Process Process;         //进程
+  unsigned char ResultCode;           //结果码
   unsigned char Version[11];         //升级版本
   unsigned short PackageTotalNum;      //升级包总数
   unsigned short PackageSize;           //升级包分片长度
   unsigned char PackageNum;             //升级包序号
+  unsigned char Buffer[64];            //升级包数据
+  unsigned short Length;                //升级包长度
 };
 /*********************************************************************************************************
 外部变量声明区
@@ -50,8 +52,13 @@ extern unsigned char APPValid;
 uint32_t EEPROM_ReadWord(uint32_t Address);
 void STM8_Interrupt_Vector_Table_Redirection(void);
 void JumptoBLD(void);
-void Upgrade_Process(unsigned char *str);
+void Run_BLD(void);
+void Upgrade_Recv_Process(unsigned char *str);
+void Upgrade_Send_Process(void);
+void SendUpgradeMessage19(void);
+void SendUpgradeMessage20(void);
 void SendUpgradeMessage24(void);
+void Upgrade_TimeOut_CallBack(void);
 /********************************************************************************************************/
 #endif
 

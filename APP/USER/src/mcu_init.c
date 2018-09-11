@@ -8,7 +8,6 @@
 文件包含区
 *********************************************************************************/
 #include "include.h"
-#include "Globaldata.h"
 /*********************************************************************************
 常量定义区
 *********************************************************************************/
@@ -169,24 +168,24 @@ void USART2_Configuration ( void )
  Return:      	//
  Others:        //
 *********************************************************************************/
-void USART3_Configuration ( void )
-{
-  CLK_PeripheralClockConfig(CLK_Peripheral_USART3, ENABLE);
-  USART_DeInit(USART3);
-  GPIO_Init(GPIOE, GPIO_Pin_7 , GPIO_Mode_In_PU_No_IT);
-  GPIO_Init(GPIOE, GPIO_Pin_6 , GPIO_Mode_Out_PP_High_Fast);
-  USART_Init(USART3,
-             9600,
-             USART_WordLength_8b,
-             USART_StopBits_1,
-             USART_Parity_No,
-             USART_Mode_TxRx);    
-  USART_ITConfig(USART3,USART_IT_RXNE, ENABLE);//允许接收完成中断
-  USART_Cmd(USART3,ENABLE);
-  
-  ITC_SetSoftwarePriority(TIM3_UPD_OVF_TRG_BRK_USART3_TX_IRQn, ITC_PriorityLevel_2);  //串口3优先级
-  ITC_SetSoftwarePriority(TIM3_CC_USART3_RX_IRQn, ITC_PriorityLevel_3);              //串口3优先级
-}
+//void USART3_Configuration ( void )
+//{
+//  CLK_PeripheralClockConfig(CLK_Peripheral_USART3, ENABLE);
+//  USART_DeInit(USART3);
+//  GPIO_Init(GPIOE, GPIO_Pin_7 , GPIO_Mode_In_PU_No_IT);
+//  GPIO_Init(GPIOE, GPIO_Pin_6 , GPIO_Mode_Out_PP_High_Fast);
+//  USART_Init(USART3,
+//             9600,
+//             USART_WordLength_8b,
+//             USART_StopBits_1,
+//             USART_Parity_No,
+//             USART_Mode_TxRx);    
+//  USART_ITConfig(USART3,USART_IT_RXNE, ENABLE);//允许接收完成中断
+//  USART_Cmd(USART3,ENABLE);
+//  
+//  ITC_SetSoftwarePriority(TIM3_UPD_OVF_TRG_BRK_USART3_TX_IRQn, ITC_PriorityLevel_2);  //串口3优先级
+//  ITC_SetSoftwarePriority(TIM3_CC_USART3_RX_IRQn, ITC_PriorityLevel_3);              //串口3优先级
+//}
 /*********************************************************************************
  Function:      //
  Description:   //

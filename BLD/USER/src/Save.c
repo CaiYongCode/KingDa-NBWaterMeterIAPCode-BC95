@@ -181,42 +181,50 @@ void Save_APP_Valid(void)
 }
 /*********************************************************************************
  Function:      //
- Description:   //读取升级有效标志
+ Description:   //读取升级信息
  Input:         //
                 //
  Output:        //
  Return:	//
  Others:        //
 *********************************************************************************/
-void Read_Upgrade_Flag(void)
+void Read_Upgrade_Info(void)
 {  
-  Upgrade.Flag = *((const unsigned char *)(UPGRADE_FLAG_ADD));
+  unsigned char i = 0; 
+  Upgrade.Process =(enum Upgrade_Process)(*((const unsigned char *)(Upgrade_Process_ADD)));
+  if(Upgrade.Process > MESSAGE24)
+  {
+    Upgrade.Process = IDLE;
+  }
+  for(i = 0;i < 11;i++)
+  {
+    Upgrade.Version[i] = *((const unsigned char *)(UPGRADE_VERSION_ADD+i));
+  }
+  Upgrade.PackageSize = *((const unsigned char *)(UPGRADE_PACKAGE_SINGLE_SIZE));
+  Upgrade.PackageTotalNum = *((const unsigned char *)(UPGRADE_PACKAGE_TOTAL_NUMBER));
+  Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
 }
 /*********************************************************************************
  Function:      //
- Description:   //存储升级有效标志
+ Description:   //存储升级信息
  Input:         //
                 //
  Output:        //
  Return:	//
  Others:        //
 *********************************************************************************/
-void Save_Upgrade_Flag(void)
-{  
-  WriteRom (UPGRADE_FLAG_ADD,&(Upgrade.Flag),1);
-}
-/*********************************************************************************
- Function:      //
- Description:   //存储升级参数
- Input:         //
-                //
- Output:        //
- Return:	//
- Others:        //
-*********************************************************************************/
-void Save_Upgrade_Info(unsigned char *buff)
-{  
-  WriteRom (UPGRADE_VERSION_ADD,buff,11);
-  WriteRom (UPGRADE_PACKAGE_SINGLE_SIZE,&buff[16],6);
+void Save_Upgrade_Info(void)
+{
+  //升级进行空闲，则清除升级信息
+  if(Upgrade.Process == IDLE)
+  {
+    memset(Upgrade.Version,'\0',11);
+    Upgrade.PackageSize = 0;
+    Upgrade.PackageTotalNum = 0;
+  }
+  WriteRom (Upgrade_Process_ADD,&(Upgrade.Process),1);
+  WriteRom (UPGRADE_VERSION_ADD,Upgrade.Version,11);
+  WriteRom (UPGRADE_PACKAGE_SINGLE_SIZE,&(Upgrade.PackageSize),2);
+  WriteRom (UPGRADE_PACKAGE_TOTAL_NUMBER,&(Upgrade.PackageTotalNum),2);
 }
 /******************************************END********************************************************/

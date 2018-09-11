@@ -14,10 +14,8 @@
 /*********************************************************************************************************
 宏定义区
 *********************************************************************************************************/
-#define  APP_VERSION       "NB_APP_V1.0"                 //软件版本V1.0
+//#define  APP_VERSION       "NB_APP_V1.0"                 //软件版本V1.0
 #define  APP_VALID          0xAA                        //APP应用程序有效
-#define  UPGRADE_VALID      0xAA                        //升级有效
-#define  UPGRADE_FINISH     0xBB                        //升级成功
 //用户代码的起始地址
 #define APP_START_ADDR     ((uint32_t)0xD000)
 
@@ -25,7 +23,7 @@
 #define  INTERRUPT_VECTOR_ADD                   (EEPROM_ADD)             //中断向量表存储地址
 #define  APP_VERSION_ADD                        (EEPROM_ADD+128)        //应用程序软件版本地址
 #define  APP_VALID_ADD                          (EEPROM_ADD+128+12)      //应用程序有效标志地址
-#define  UPGRADE_FLAG_ADD                       (EEPROM_ADD+128+13)      //升级有效标志地址
+#define  Upgrade_Process_ADD                    (EEPROM_ADD+128+23)      //升级进程地址
 #define  UPGRADE_VERSION_ADD                    (EEPROM_ADD+128+24)      //升级程序软件版本地址
 #define  UPGRADE_PACKAGE_SINGLE_SIZE            (EEPROM_ADD+128+36)      //升级包大小
 #define  UPGRADE_PACKAGE_TOTAL_NUMBER           (EEPROM_ADD+128+38)      //升级包总数
@@ -76,6 +74,7 @@
 *********************************************************************************************************/
 void Sleep(void);
 void IWDG_INIT(void);
+void Check_Version(void);
 /********************************************************************************************************/
 #endif
 

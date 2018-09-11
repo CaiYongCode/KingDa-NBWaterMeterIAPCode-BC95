@@ -54,7 +54,7 @@ const unsigned short Temp_Table[166] =  //温度参数表
  Return:      	//
  Others:        //
 *********************************************************************************/
-signed char Read_Temp(void)
+void Read_Temp(void)
 {
   unsigned short ADC_Data = 0;
   unsigned char i;
@@ -95,7 +95,6 @@ signed char Read_Temp(void)
   {
     MeterParameter.Temp = temp;
   }
-  return temp;
 }
 /*********************************************************************************
  Function:      //

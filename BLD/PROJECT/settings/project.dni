@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1736940967
+Checksum=1021028906
 [CallStack]
 ShowArgs=0
 [Disassembly]
@@ -49,15 +49,17 @@ Fmt1=struct BC95_Str-FailTimes	3	0
 Fmt2=struct BC95_Str-Reconnect_Times	3	0
 Fmt3=struct BC95_Str-Report_Bit	3	0
 Fmt4=struct BC95_Str-Rssi	3	0
-Fmt5=struct Upgrade_Str-Flag	4	0
-Fmt6=struct Upgrade_Str-PackageNum	3	0
-Fmt7=struct Upgrade_Str-ProgramAddr	4	0
+Fmt5=struct Upgrade_Str-PackageNum	3	0
+Fmt6=struct Upgrade_Str-ProgramAddr	4	0
+Fmt7=struct Upgrade_Str-ResultCode	3	0
+Fmt8=struct Upgrade_Str-TimeoutCounter	4	0
 [array_types]
 Fmt0=unsigned char[512]	4	0
 [watch_formats]
-Fmt0={W}42:a	3	0
-Fmt1={W}42:b	3	0
-Fmt2={W}42:times	3	0
+Fmt0={W}42:APPValid	4	0
+Fmt1={W}42:a	3	0
+Fmt2={W}42:b	3	0
+Fmt3={W}42:times	3	0
 [DataSample]
 LogEnabled=0
 GraphEnabled=0
@@ -65,11 +67,10 @@ ShowTimeLog=1
 [Breakpoints]
 Bp0=_ "STD_CODE" "{}.67.3" 0 0 0 0 "" 0 ""
 Bp1=_ "STD_CODE" "{}.99.3" 0 0 0 0 "" 0 ""
-Bp2=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.318.9" 1 0 0 0 "" 0 ""
-Bp3=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.296.15" 1 0 0 0 "" 0 ""
-Bp4=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.245.9" 1 0 0 0 "" 0 ""
-Bp5=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.52.5" 0 0 0 0 "" 0 ""
-Count=6
+Bp2=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.92.5" 1 0 0 0 "" 0 ""
+Bp3=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.662.5" 1 0 0 0 "" 0 ""
+Bp4=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.342.13" 1 0 0 0 "" 0 ""
+Count=5
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

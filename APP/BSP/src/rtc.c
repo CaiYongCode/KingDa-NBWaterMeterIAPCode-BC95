@@ -261,13 +261,13 @@ void Wake_Interrupt (void)
     
 //     if(on == 1)
 //    {
-//      GPIO_SetBits(GPIOD,GPIO_Pin_6);
-//      GPIO_SetBits(GPIOD,GPIO_Pin_7);
+// //     GPIO_SetBits(GPIOD,GPIO_Pin_6);   //G
+//      GPIO_SetBits(GPIOD,GPIO_Pin_7); //Y
 //      on = 0;
 //    }
 //    else
 //    {
-//      GPIO_ResetBits(GPIOD,GPIO_Pin_6);
+////      GPIO_ResetBits(GPIOD,GPIO_Pin_6);
 //      GPIO_ResetBits(GPIOD,GPIO_Pin_7);
 //      on = 1;
 //    }

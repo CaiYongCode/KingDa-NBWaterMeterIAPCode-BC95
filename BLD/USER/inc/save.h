@@ -35,9 +35,8 @@ void Save_Add_Flow(u16 addr,union flow_union *Flow);       //´æ´¢ÀÛ»ýË®Á¿
 
 void Read_APP_Valid(void);
 void Save_APP_Valid(void);
-void Read_Upgrade_Flag(void);
-void Save_Upgrade_Flag(void);
-void Save_Upgrade_Info(unsigned char *buff);
+void Read_Upgrade_Info(void);
+void Save_Upgrade_Info(void);
 /********************************************************************************************************/
 #endif
 

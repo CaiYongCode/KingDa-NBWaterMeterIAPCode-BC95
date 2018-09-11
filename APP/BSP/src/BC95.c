@@ -51,8 +51,9 @@ void BC95_Power_On(void)        //BC95上电
   
   BC95.Start_Process = BC95_POWER_UP; 
   
+
   Create_Timer(ONCE,1,
-                     BC95_Reset,0,PROCESS); 
+               BC95_Reset,0,PROCESS); 
 }
 /*********************************************************************************
  Function:      //
@@ -136,9 +137,11 @@ void BC95_Process(void)                         //BC95主进程
     }
   }
   
-  if(BC95.Incident_Pend != FALSE) //检测是否有事件挂起
+  if( (BC95.Incident_Pend != FALSE)||(Upgrade.Incident_Pend != FALSE)) //检测是否有事件挂起
   {
     BC95.Incident_Pend = FALSE; //清除事件挂起
+    Upgrade.Incident_Pend = FALSE;
+    
     switch(BC95.Start_Process)
     {
     case AT:                  //同步波特率
@@ -235,36 +238,17 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case NMGS:                 //发送消息     
       { 
-        if(Upgrade.Flag == UPGRADE_FINISH)
+        //优先处理升级事件
+        if(Upgrade.Process != IDLE)
         {
-          SendUpgradeMessage24();
-          Create_Timer(ONCE,5,
-                       BC95_Recv_Timeout_CallBack,0,PROCESS); 
+          Upgrade_Send_Process();       //发送升级
         }
         else
         {
-          if(1 == Send_Data_Process())   //有消息发送
-          {   
-            Create_Timer(ONCE,5,
-                       BC95_Recv_Timeout_CallBack,0,PROCESS); 
-          }
+          Send_Data_Process();          //发送数据
         }
       }
       break;
-//    case NQMGR:                 //查询消息接收缓存
-//      {
-//        BC95_Data_Send("AT+NQMGR\r\n",10);
-//        Create_Timer(ONCE,5,
-//                     BC95_Recv_Timeout_CallBack,0,PROCESS); 
-//      }
-//      break;
-//    case NMGR:                 //接收消息
-//      {
-//        BC95_Data_Send("AT+NMGR\r\n",9);
-//        Create_Timer(ONCE,BC95_R_TIMEROUT_TIME,
-//                     BC95_Recv_Timeout_CallBack,0,PROCESS); 
-//      }
-//      break;
     case BC95_CONNECT_ERROR:      //连接失败
       BC95_Power_Off();
       BC95.Start_Process = BC95_RECONNECT;
@@ -489,8 +473,7 @@ void BC95_Process(void)                         //BC95主进程
           } 
           else if(strnstr(str1,",FFFE",16) != NULL)           //升级相关命令
           {
-            Upgrade_Process((unsigned char*)str1);
-            Delete_Timer(BC95_Recv_Timeout_CallBack);//删除超时回调
+            Upgrade_Recv_Process((unsigned char*)str1);
           }
 
           str1 = str2;
@@ -540,12 +523,6 @@ void BC95_Recv_Timeout_CallBack(void)//启动超时重发
   }
   else
   {
-    if(Upgrade.Flag == UPGRADE_FINISH)
-    {
-      Upgrade.Flag = 0;
-      Save_Upgrade_Flag();
-    }
-
     BC95.ErrorRecord = BC95.Start_Process;
     Save_BC95_ErrorRecord();
     
@@ -566,20 +543,6 @@ void BC95_Delay_CallBack(void)
 {
   BC95.Incident_Pend = TRUE;//标记挂起
 }
-/*********************************************************************************
- Function:      //
- Description:   //BC95断电回调函数
- Input:         //
-                //
- Output:        //
- Return:        //
- Others:        //
-*********************************************************************************/
-//void BC95_PowerDown_CallBalk(void)
-//{
-//  BC95.Incident_Pend = TRUE;//标记挂起
-//  BC95.Start_Process = BC95_POWER_DOWN;
-//}
 /*********************************************************************************
  Function:      //
  Description:   //接收消息进程
@@ -736,7 +699,7 @@ void Recv_Data_Process(unsigned char* buff)
  Return:        //
  Others:        //
 *********************************************************************************/
-unsigned char Send_Data_Process(void)
+void Send_Data_Process(void)
 { 
   unsigned char SendFlag = 0;
   
@@ -747,19 +710,20 @@ unsigned char Send_Data_Process(void)
         BC95.FailTimes = 0;
         BC95.Incident_Pend = TRUE;//标记挂起
         BC95.Start_Process = BC95_POWER_DOWN;
-        SendFlag = 0;
       }
       break;
     case 1:            //发送全部参数
       {
-        Report_All_Parameters();
-        SendFlag = 1;
+        Report_All_Parameters();   
+        Create_Timer(ONCE,5,
+                       BC95_Recv_Timeout_CallBack,0,PROCESS); 
       }
       break;
     case 2:            //发送历史累积流量
       {
         Report_HC_Flow();
-        SendFlag = 1;
+        Create_Timer(ONCE,5,
+                       BC95_Recv_Timeout_CallBack,0,PROCESS); 
       }
       break;
     case 3:            //发送历史数据
@@ -770,12 +734,16 @@ unsigned char Send_Data_Process(void)
           BC95.Report_Bit = 0;
           BC95.Incident_Pend = TRUE;
         }
+        else
+        {
+          Create_Timer(ONCE,5,
+                       BC95_Recv_Timeout_CallBack,0,PROCESS); 
+        }
       }
       break;
     default:
       break;
   }
-  return SendFlag;
 }
 /*********************************************************************************
  Function:      //
@@ -834,9 +802,8 @@ void Report_All_Parameters(void)
   //获取上次联网错误信息
   Read_BC95_ErrorRecord();
   
-  //测量温度
-  Read_Temp();
-  
+  //测量温度 
+  Read_Temp(); 
   //测量电压
   Read_Voltage();
   

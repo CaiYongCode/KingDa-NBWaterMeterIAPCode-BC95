@@ -123,7 +123,6 @@ void Rtc_Config(void)
  Return:      	//
  Others:        //
 *********************************************************************************/
-unsigned char a = 0,b = 0;
 void Wake_Interrupt (void)                        
 {
   if(RESET != RTC_GetITStatus(RTC_IT_WUT))

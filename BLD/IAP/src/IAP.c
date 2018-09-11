@@ -44,18 +44,19 @@ unsigned char APPValid;
 void Check_Run_APP(void)
 {
   Read_APP_Valid();
-  Read_Upgrade_Flag();
+  Read_Upgrade_Info();
   
   //如果APP程序有效且不用升级，则运行APP程序
-  if( (APPValid == APP_VALID)&&(Upgrade.Flag != UPGRADE_VALID) )
+  if( (APPValid == APP_VALID)&&(Upgrade.Process == IDLE) )
   {
-    Run_APP();
+    STM8_Interrupt_Vector_Table_Redirection();
+    JumptoAPP();
   }
 }
 
 /*********************************************************************************
  Function:      //
- Description:   //验证是否运行APP程序
+ Description:   //运行APP程序
  Input:         //
                 //
  Output:        //
@@ -79,16 +80,43 @@ void Run_APP(void)
 void STM8_Interrupt_Vector_Table_Init(void)
 {
   unsigned char Index = 0;
+  uint32_t data = 0;
   uint32_t Vector[32] = {0};
   
   FLASH_Unlock(FLASH_MemType_Program);    
-  for(Index = 1; Index < 0x20;Index++)
+  //如果BLD中断向量表次地址和APP中断向量表次地址相同；
+  //则表明程序从APP异常复位进入BLD程序
+  if(FLASH_ReadWord(0x8000+4) == (0x82000000+APP_START_ADDR+4))
   {
-    Vector[Index] = FLASH_ReadWord(0x8000+4*Index);
+    for(Index = 1; Index < 0x20;Index++)
+    {
+      data = EEPROM_ReadWord(INTERRUPT_VECTOR_ADD+4*Index);
+      FLASH_ProgramWord(0x8000+4*Index,data);
+    }
+  }
+  else
+  {
+    for(Index = 1; Index < 0x20;Index++)
+    {
+      Vector[Index] = FLASH_ReadWord(0x8000+4*Index);
+    }
+    WriteRom (INTERRUPT_VECTOR_ADD,Vector,128);
   }
   FLASH_Lock(FLASH_MemType_Program);
-  
-  WriteRom (INTERRUPT_VECTOR_ADD,Vector,128);
+
+}
+/*********************************************************************************
+ Function:      //
+ Description:   //读EEPROM地址数据
+ Input:         //
+                //
+ Output:        //
+ Return:      	//
+ Others:        //
+*********************************************************************************/
+uint32_t EEPROM_ReadWord(uint32_t Address)
+{
+ return(*(PointerAttr uint32_t *) (uint32_t)Address);       
 }
 /*********************************************************************************
  Function:      //
@@ -191,21 +219,53 @@ void JumptoAPP(void)
   asm("LDW SP, X  ");
   asm("JPF $D000");
 }
+
 /*********************************************************************************
  Function:      //
- Description:   //在线升级流程
+ Description:   //升级流程
  Input:         //
                 //
  Output:        //
  Return:      	//
  Others:        //
 *********************************************************************************/
-void Upgrade_Process(unsigned char *str)
+void Upgrade_Process(void)
+{
+  char *str1 = NULL;
+  char *str2 = NULL;
+  str1 = strstr(Uart2.R_Buffer,",FFFE"); 
+  //处理消息粘包
+  while(str1 != NULL)
+  { 
+    str2 = strstr(str1+6,",FFFE"); 
+            
+    Upgrade_Recv_Process((unsigned char*)str1);
+
+    str1 = str2;
+  }
+  
+  Upgrade_Send_Process();
+  
+  memset(Uart2.R_Buffer,'\0',Uart2.Receive_Length);//清空接收缓冲区
+  Uart2.Receive_Length = 0;
+  Uart2.Receive_Pend = FALSE;
+}
+/*********************************************************************************
+ Function:      //
+ Description:   //升级接受流程
+ Input:         //
+                //
+ Output:        //
+ Return:      	//
+ Others:        //
+*********************************************************************************/
+void Upgrade_Recv_Process(unsigned char *str)
 {
   unsigned short i = 0,j = 0;
   unsigned char MessageID = 0;
   unsigned short crc16 = 0;
   ErrorStatus ProgramStatus = SUCCESS;
+  unsigned char APPVersion[11] = {0};
   
   memset(Upgrade.Buffer,'\0',Upgrade.Length);//清缓存
   Upgrade.Length = 0;
@@ -247,29 +307,30 @@ void Upgrade_Process(unsigned char *str)
           return;
         }
         Upgrade.Process = MESSAGE19;
-        SendUpgradeMessage19();        
+        Upgrade.Incident_Pend = TRUE; 
+        Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+        Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调    
       }
       break;
     case MESSAGE20:           //新版本通知
       {
-        //+NNMI:30,FFFE01145A5A0016 4E425F4150505F56312E310000000000 01F4 0032 0000
-       
+        //+NNMI:30,FFFE01145A5A0016 4E425F4150505F56312E310000000000 01F4 0032 0000 
         Upgrade.Process = MESSAGE20;
-        if((BC95.Rssi < 10)||(BC95.Rssi == 99))
+        Read_Version(APP_VERSION_ADD,APPVersion);
+        if( 0 == memcmp(APPVersion,&Upgrade.Buffer[8],11) )     //已经是最新版本
         {
-          SendUpgradeMessage20(0x02);   //回复信号质量差
+          Upgrade.ResultCode = 0x03;
         }
-        else
+        else                                                    //可以升级
         {
-          Upgrade.PackageSize = Upgrade.Buffer[24]*256+Upgrade.Buffer[25];
-          Upgrade.PackageTotalNum = Upgrade.Buffer[26]*256+Upgrade.Buffer[27];
+          Upgrade.ResultCode = 0x00;
           memcpy(Upgrade.Version,&Upgrade.Buffer[8],11);
-          
-          SendUpgradeMessage20(0x00);   //回复可以升级
-          
-          Create_Timer(ONCE,1,
-                   SendUpgradeMessage21,0,PROCESS);//1s后请求第一包升级包   
+          Upgrade.PackageSize = Upgrade.Buffer[24]*256+Upgrade.Buffer[25];
+          Upgrade.PackageTotalNum = Upgrade.Buffer[26]*256+Upgrade.Buffer[27]; 
         }
+        Upgrade.Incident_Pend = TRUE;
+        Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+        Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调
       } 
       break;
     case MESSAGE21:            //下发升级包
@@ -292,13 +353,18 @@ void Upgrade_Process(unsigned char *str)
           {
             if(Upgrade.PackageNum == (Upgrade.PackageTotalNum-1))
             {
-              //校验升级包;
-              SendUpgradeMessage22(0x00);        //上报升级包下载完成        
+              Upgrade.Process = MESSAGE22;
+              Upgrade.Incident_Pend = TRUE;
+              Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+              Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调
+              
             }
             else
             {
               Upgrade.PackageNum++;
-              SendUpgradeMessage21();//请求下一包升级包          
+              Upgrade.Incident_Pend = TRUE;
+              Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+              Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调       
             }
           }
           else
@@ -316,28 +382,98 @@ void Upgrade_Process(unsigned char *str)
     case MESSAGE23:            //平台命令升级
       {
         Upgrade.Process = MESSAGE23;
-        SendUpgradeMessage23();
-        
-        //保存当前水量
-        Save_Add_Flow(ADD_FLOW_ADD,&Cal.Water_Data);
-        //保存升级完成标志
-        Upgrade.Flag = UPGRADE_FINISH;
-        Save_Upgrade_Flag();
-        //保存升级版本
-        Save_Version(APP_VERSION_ADD,Upgrade.Version);
-        //跳转到应用程序
-        Create_Timer(ONCE,2,
-                   Run_APP,0,PROCESS);
+        Upgrade.Incident_Pend = TRUE;
+        Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+        Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调
       }
       break;
     default:
       break;
   }
-  
-  Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调
-  Create_Timer(ONCE,20,
-                     Upgrade_TimeOut_CallBack,0,PROCESS);//5s升级超时回调
 }
+/*********************************************************************************
+ Function:      //
+ Description:   //升级发送进程
+ Input:         //
+                //
+ Output:        //
+ Return:      	//
+ Others:        //
+*********************************************************************************/
+void Upgrade_Send_Process(void)
+{
+  
+  switch(Upgrade.Process)
+  {
+    case MESSAGE19:            //平台查询设备版本，设备响应
+      { 
+        SendUpgradeMessage19();
+        
+        Create_Timer(ONCE,UPGRADE_TIMEROUT_TIME,
+                     Upgrade_TimeOut_CallBack,0,PROCESS);//升级超时回调
+      }
+      break;
+    case MESSAGE20:           //平台通知新版本，设备响应
+      {
+        SendUpgradeMessage20();  
+        if(Upgrade.ResultCode == 0x03)  //已经是最新版本
+        {
+          Upgrade.Process = IDLE;
+          Save_Upgrade_Info();
+        
+          Upgrade.Incident_Pend = FALSE;
+          Create_Timer(ONCE,2,
+                       BC95_Delay_CallBack,0,PROCESS);//延时2s
+        }
+        else if(Upgrade.ResultCode == 0x00)
+        {
+          Upgrade.PackageNum = 0;
+          Upgrade.Process = MESSAGE21;
+          Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX; 
+          Create_Timer(ONCE,2,
+                     Upgrade_Delay_CallBack,0,PROCESS);//延时2s请求第一包数据
+        }  
+      } 
+      break;
+    case MESSAGE21:            //请求升级包
+      {
+        SendUpgradeMessage21();//请求下一包升级包
+        Create_Timer(ONCE,UPGRADE_TIMEROUT_TIME,
+                     Upgrade_TimeOut_CallBack,0,PROCESS);//升级超时回调
+      }
+      break;
+    case MESSAGE22:            //设备上报升级包下载状态
+      {
+        SendUpgradeMessage22();        //上报升级包下载完成  
+        Create_Timer(ONCE,UPGRADE_TIMEROUT_TIME,
+                     Upgrade_TimeOut_CallBack,0,PROCESS);//升级超时回调
+      }
+      break;
+    case MESSAGE23:            //平台命令升级，设备响应
+      {
+        SendUpgradeMessage23();
+
+        //保存当前水量
+        Save_Add_Flow(ADD_FLOW_ADD,&Cal.Water_Data);
+        //保存升级信息
+        Upgrade.Process = MESSAGE24;
+        Save_Upgrade_Info();
+        //保存新版本
+        Save_Version(APP_VERSION_ADD,Upgrade.Version);
+        //跳转到应用程序
+        Create_Timer(ONCE,2,
+                     Run_APP,0,PROCESS);
+      }
+      break;
+    case MESSAGE24:            //设备上报升级成功
+      {
+      }
+      break;
+    default:
+      break;
+  }
+}
+
 /*********************************************************************************
  Function:      //
  Description:   //平台查询软件版本，设备响应报文
@@ -351,11 +487,11 @@ void SendUpgradeMessage19(void)
 {
   unsigned char i = 0;
   unsigned short crc16 = 0;
-  unsigned char version[11] = {0};
+  unsigned char version[11] = "NB_APP_V1.0";
   unsigned char buff[26] = {0};
   uint8_t data[64] = "AT+NMGS=25,00000000000000000000000000000000000000000000000000\r\n";
   
-  //如果APPValid有效，取eeprom数据，否则取0
+  //如果APPValid有效，取eeprom数据，否则取默认值
   if(APPValid == APP_VALID)
   {
     Read_Version(APP_VERSION_ADD,version);
@@ -383,7 +519,7 @@ void SendUpgradeMessage19(void)
     
   }
 
-  BC95_Data_Send(data,63);
+  Uart2_Send(data,63);
 }
 /*********************************************************************************
  Function:      //
@@ -394,7 +530,7 @@ void SendUpgradeMessage19(void)
  Return:      	//
  Others:        //
 *********************************************************************************/
-void SendUpgradeMessage20(unsigned char ResultCode)
+void SendUpgradeMessage20(void)
 {
   unsigned char i = 0;
   unsigned short crc16 = 0;
@@ -409,7 +545,7 @@ void SendUpgradeMessage20(unsigned char ResultCode)
   buff[5] = 0;
   buff[6] = 0;
   buff[7] = 1;
-  buff[8] = ResultCode;
+  buff[8] = Upgrade.ResultCode;
   
   crc16 = CRC16(buff,9);
   buff[4] = (crc16>>8)&0xFF;
@@ -418,8 +554,7 @@ void SendUpgradeMessage20(unsigned char ResultCode)
   for(i = 0;i < 9;i++)    
   {
     data[10+2*i] = Int_to_ASCLL(buff[i]/0x10);
-    data[11+2*i] = Int_to_ASCLL(buff[i]%0x10);
-    
+    data[11+2*i] = Int_to_ASCLL(buff[i]%0x10);  
   }
   
   Uart2_Send(data,30);
@@ -473,7 +608,7 @@ void SendUpgradeMessage21(void)
  Return:      	//
  Others:        //
 *********************************************************************************/
-void SendUpgradeMessage22(unsigned char ResultCode)
+void SendUpgradeMessage22(void)
 {
  unsigned char i = 0;
   unsigned short crc16 = 0;
@@ -488,7 +623,7 @@ void SendUpgradeMessage22(unsigned char ResultCode)
   buff[5] = 0;
   buff[6] = 0;
   buff[7] = 1;
-  buff[8] = ResultCode;
+  buff[8] = Upgrade.ResultCode;
   
   crc16 = CRC16(buff,9);
   buff[4] = (crc16>>8)&0xFF;
@@ -500,7 +635,7 @@ void SendUpgradeMessage22(unsigned char ResultCode)
     data[11+2*i] = Int_to_ASCLL(buff[i]%0x10);
   }
   
-  BC95_Data_Send(data,30);
+  Uart2_Send(data,30);
 }
 /*********************************************************************************
  Function:      //
@@ -538,46 +673,7 @@ void SendUpgradeMessage23(void)
     data[11+2*i] = Int_to_ASCLL(buff[i]%0x10);
   }
   
-  BC95_Data_Send(data,30);
-}
-/*********************************************************************************
- Function:      //
- Description:   //设备上报升级结果
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-void SendUpgradeMessage24(void)
-{
-  unsigned char i = 0;
-  unsigned short crc16 = 0;
-  unsigned char buff[26] = {0};
-  uint8_t data[64] = "AT+NMGS=25,00000000000000000000000000000000000000000000000000\r\n";
-    
-  buff[0] = 0xFF;
-  buff[1] = 0xFE;
-  buff[2] = 0x01;
-  buff[3] = MESSAGE24;
-  buff[4] = 0;
-  buff[5] = 0;
-  buff[6] = 0;
-  buff[7] = 17;
-  buff[8] = 0x00;
-  memcpy(&buff[9],Upgrade.Version,11);
-  
-  crc16 = CRC16(buff,25);
-  buff[4] = (crc16>>8)&0xFF;
-  buff[5] = crc16&0xFF;
-  
-  for(i = 0;i < 25;i++)    
-  {
-    data[11+2*i] = Int_to_ASCLL(buff[i]/0x10);
-    data[12+2*i] = Int_to_ASCLL(buff[i]%0x10);
-  }
-  
-  BC95_Data_Send(data,63);
+  Uart2_Send(data,30);
 }
 /*********************************************************************************
  Function:      //
@@ -591,86 +687,33 @@ void SendUpgradeMessage24(void)
 *********************************************************************************/
 void Upgrade_TimeOut_CallBack(void)
 {
-  Upgrade.Process = WAIT;
-  Upgrade.PackageSize = 0;
-  Upgrade.PackageTotalNum = 0;
-  Upgrade.PackageNum = 0;;           
-  Upgrade.ProgramAddr = 0; 
-  memset(Upgrade.Version,'\0',11);
-                  
-  Upgrade.Flag = 0;
-  Save_Upgrade_Flag();
+  if(Upgrade.TimeoutCounter != 0)//判断次数是否超时
+  {
+    Upgrade.Incident_Pend = TRUE;
+    Upgrade.TimeoutCounter--;
+  }
+  else
+  {
+    Upgrade.PackageNum = 0;          
+    Upgrade.ProgramAddr = 0; 
+    Upgrade.Process = IDLE;
+    Save_Upgrade_Info();
   
-  SendUpgradeMessage22(0x06);        //上报升级包下载超时
+    Upgrade.Incident_Pend = FALSE;
+    BC95.Incident_Pend = TRUE;
+  }
   
-  Create_Timer(ONCE,2,
-                     MCU_DeInit,0,PROCESS);//2s
 }
 /*********************************************************************************
  Function:      //
- Description:   //
+ Description:   //升级延时回调函数
  Input:         //
                 //
  Output:        //
- Return:	//
+ Return:        //
  Others:        //
 *********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-/**************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-
-/*********************************************************************************
- Function:      //
- Description:   //
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
+void Upgrade_Delay_CallBack(void)
+{
+  Upgrade.Incident_Pend = TRUE;//标记挂起
+}

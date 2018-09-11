@@ -50,7 +50,6 @@ void BC95_Power_On(void)        //BC95上电
   GPIO_SetBits(GPIOE,GPIO_Pin_1);      //复位脚拉低
   
   BC95.Start_Process = BC95_POWER_UP; 
-  Upgrade.Process = WAIT;
   
   Create_Timer(ONCE,1,
                      BC95_Reset,0,PROCESS); 
@@ -134,9 +133,10 @@ void BC95_Process(void)                         //BC95主进程
     }
   }
   
-  if(BC95.Incident_Pend != FALSE) //检测是否有事件挂起
+  if((BC95.Incident_Pend != FALSE)||(Upgrade.Incident_Pend != FALSE)) //检测是否有事件挂起
   {
     BC95.Incident_Pend = FALSE; //清除事件挂起
+    Upgrade.Incident_Pend = FALSE;
     switch(BC95.Start_Process)
     {
     case AT:                  //同步波特率
@@ -233,25 +233,27 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case NMGS:                 //发送消息     
       { 
-        Report_History_Data();
-        Create_Timer(ONCE,5,
-           BC95_Recv_Timeout_CallBack,0,PROCESS); 
+        //优先处理升级事件
+        if(Upgrade.Process != IDLE)
+        {
+          Upgrade_Send_Process();       //发送升级
+        }
+        else
+        {
+          if(BC95.Report_Bit != 0)
+          {
+            Report_History_Data();          //发送数据
+            Create_Timer(ONCE,5,
+                        BC95_Recv_Timeout_CallBack,0,PROCESS);
+          }
+          else
+          {
+            BC95.Start_Process = BC95_POWER_DOWN;
+            BC95.Incident_Pend = TRUE;//标记挂起
+          }
+        }  
       }
       break;
-//    case NQMGR:                 //查询消息接收缓存
-//      {
-//        BC95_Data_Send("AT+NQMGR\r\n",10);
-//        Create_Timer(ONCE,5,
-//                     BC95_Recv_Timeout_CallBack,0,PROCESS); 
-//      }
-//      break;
-//    case NMGR:                 //接收消息
-//      {
-//        BC95_Data_Send("AT+NMGR\r\n",9);
-//        Create_Timer(ONCE,BC95_R_TIMEROUT_TIME,
-//                     BC95_Recv_Timeout_CallBack,0,PROCESS); 
-//      }
-//      break;
     case BC95_CONNECT_ERROR:      //连接失败
       BC95_Power_Off();
       BC95.Start_Process = BC95_RECONNECT;
@@ -266,17 +268,15 @@ void BC95_Process(void)                         //BC95主进程
       break;
     }
   }
+  
   if(Uart2.Receive_Pend != FALSE)//判断有数据
-  {
-    memset(BC95.R_Buffer,'\0',RECV_BUFF_SIZE);//清缓存
-    BC95.RecvLength = Uart2_Receive((unsigned char *)BC95.R_Buffer);//接收数据
-//    Uart2.Receive_Pend = FALSE;
+  { 
     
     switch(BC95.Start_Process)
     {
     case AT:            //同步波特率
       {
-        if(strstr(BC95.R_Buffer,"OK") != NULL)
+        if(strstr(Uart2.R_Buffer,"OK") != NULL)
         {         
           BC95.Start_Process = GETNBAND;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -286,7 +286,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case GETNBAND:               //查询频段
       {       
-        if(strstr(BC95.R_Buffer,"+NBAND:5") != NULL)    //支持频段5
+        if(strstr(Uart2.R_Buffer,"+NBAND:5") != NULL)    //支持频段5
         {
           BC95.Start_Process = GETCFUN;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -296,7 +296,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case GETCFUN:                //查询电话功能
       {
-        if(strstr(BC95.R_Buffer,"+CFUN:1") != NULL)     //全功能
+        if(strstr(Uart2.R_Buffer,"+CFUN:1") != NULL)     //全功能
         {         
           BC95.Start_Process = CGSN;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -306,7 +306,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case CGSN:         // 查询IMEI
       {
-        str = strstr(BC95.R_Buffer,"+CGSN");
+        str = strstr(Uart2.R_Buffer,"+CGSN");
         if( str != NULL)//获取到IMEI
         {
           BC95.Start_Process = CCID;
@@ -317,7 +317,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
      case CCID:          //查询CCID
       {
-        str = strstr(BC95.R_Buffer,"+NCCID");
+        str = strstr(Uart2.R_Buffer,"+NCCID");
         if( str != NULL)
         {
           BC95.Start_Process = CSQ;
@@ -328,7 +328,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case CSQ:           //查询信号强度
       {
-        str = strstr(BC95.R_Buffer,"+CSQ");
+        str = strstr(Uart2.R_Buffer,"+CSQ");
         if( str != NULL)
         {
           BC95.Rssi =0;//保存信号强度
@@ -353,7 +353,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case GETCGATT:       //查询网络激活状态
       {
-        if( strstr(BC95.R_Buffer,"+CGATT:1") != NULL)//网络激活
+        if( strstr(Uart2.R_Buffer,"+CGATT:1") != NULL)//网络激活
         {        
           BC95.Start_Process = CEREG;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -363,7 +363,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case CEREG:       //查询网络注册状态
       {
-        if( strstr(BC95.R_Buffer,"+CEREG:0,1") != NULL)//网络注册
+        if( strstr(Uart2.R_Buffer,"+CEREG:0,1") != NULL)//网络注册
         {        
           BC95.Start_Process = CCLK;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -373,7 +373,7 @@ void BC95_Process(void)                         //BC95主进程
       break;   
     case CCLK:       //查询实时时间
       {
-        str = strstr(BC95.R_Buffer,"+CCLK:");
+        str = strstr(Uart2.R_Buffer,"+CCLK:");
         if( str != NULL)
         {  
           GMT_to_BT((unsigned char*)str);
@@ -385,7 +385,7 @@ void BC95_Process(void)                         //BC95主进程
       break;   
     case  GETNCDP:                 //查询CDP服务器
       {
-        if( strstr(BC95.R_Buffer,"+NCDP:180.101.147.115,5683") != NULL)//获取到NCDP
+        if( strstr(Uart2.R_Buffer,"+NCDP:180.101.147.115,5683") != NULL)//获取到NCDP
         {        
           BC95.Start_Process = NSMI;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -401,7 +401,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case  SETNCDP:                 //设置CDP服务器 
       {
-        if(strstr(BC95.R_Buffer,"OK") != NULL)
+        if(strstr(Uart2.R_Buffer,"OK") != NULL)
         {         
           BC95.Start_Process = GETNCDP;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -411,7 +411,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case NSMI:                 //设置发送消息指示
       {
-        if(strstr(BC95.R_Buffer,"OK") != NULL)
+        if(strstr(Uart2.R_Buffer,"OK") != NULL)
         {         
           BC95.Start_Process = NNMI;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -421,7 +421,7 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case  NNMI:                 //设置接收消息指示 
       {
-        if(strstr(BC95.R_Buffer,"OK") != NULL)
+        if(strstr(Uart2.R_Buffer,"OK") != NULL)
         {         
           BC95.Start_Process = NMGS;
           BC95.Incident_Pend = TRUE;//标记挂起
@@ -431,24 +431,21 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case NMGS:        //发送消息
       {  
-        str1 = strstr(BC95.R_Buffer,"+NNMI:"); 
+        str1 = strstr(Uart2.R_Buffer,"+NNMI:"); 
         //处理消息粘包
         while(str1 != NULL)
         { 
           str2 = strstr(str1+6,"+NNMI:"); 
           if(strnstr(str1,"+NNMI:4,AAAA0002",16) != NULL)     //上报历史数据的响应
           {
+            BC95.Report_Bit = 0;
             Delete_Timer(BC95_Recv_Timeout_CallBack);//删除接收超时回调
-            Create_Timer(ONCE,20,
-                     Upgrade_TimeOut_CallBack,0,PROCESS);//20s升级超时回调
-            if( Upgrade.Flag == UPGRADE_VALID )
-            {
-              SendUpgradeMessage19();
-            } 
+            Create_Timer(ONCE,10,
+                     BC95_Delay_CallBack,0,PROCESS); 
           }
           else if(strnstr(str1,",FFFE",16) != NULL)           //升级相关命令
           {          
-            Upgrade_Process((unsigned char*)str1);
+            Upgrade_Recv_Process((unsigned char*)str1);
           }
           
           str1 = str2;
@@ -462,8 +459,9 @@ void BC95_Process(void)                         //BC95主进程
       break;
     }
     
-//    memset(Uart2.R_Buffer,'\0',RECV_BUFF_SIZE);//清接收缓冲区
-//    Uart2.Receive_Length = 0;
+    memset(Uart2.R_Buffer,'\0',Uart2.Receive_Length);//清接收缓冲区
+    Uart2.Receive_Length = 0;
+    Uart2.Receive_Pend = FALSE;
   }
   
 }
@@ -479,8 +477,6 @@ void BC95_Process(void)                         //BC95主进程
 *********************************************************************************/
 void BC95_Data_Send(unsigned char *Data,unsigned short Len)
 {    
-//  memset(Uart2.R_Buffer,'\0',RECV_BUFF_SIZE);//清接收缓冲区
-//  Uart2.Receive_Length = 0;
   Uart2_Send((unsigned char*)Data,Len);
 }
 
@@ -508,7 +504,7 @@ void BC95_Recv_Timeout_CallBack(void)//启动超时重发
 }
 /*********************************************************************************
  Function:      //
- Description:   //
+ Description:   //延时回调函数
  Input:         //
                 //
  Output:        //
@@ -519,16 +515,6 @@ void BC95_Delay_CallBack(void)
 {
   BC95.Incident_Pend = TRUE;//标记挂起
 }
-
-/*********************************************************************************
- Function:      //
- Description:   //发送消息进程
- Input:         //
-                //
- Output:        //
- Return:        //
- Others:        //
-*********************************************************************************/
 /*********************************************************************************
  Function:      //
  Description:   //上报历史数据

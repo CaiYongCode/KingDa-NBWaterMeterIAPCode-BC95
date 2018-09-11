@@ -44,8 +44,8 @@ void Clear_Single_History_Data();
 
 void Read_APP_Valid(void);
 void Save_APP_Valid(void);
-void Read_Upgrade_Flag(void);
-void Save_Upgrade_Flag(void);
+void Read_Upgrade_Info(void);
+void Save_Upgrade_Info(void);
 /********************************************************************************************************/
 #endif
 

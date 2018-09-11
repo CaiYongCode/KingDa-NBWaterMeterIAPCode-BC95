@@ -62,7 +62,7 @@ extern struct Str_Uart2_Data Uart2;
 º¯ÊýÉùÃ÷Çø
 *********************************************************************************************************/
 ErrorStatus Uart2_Send(unsigned char *Send_Data,unsigned short Send_Lenght);
-unsigned short Uart2_Receive(unsigned char *R_buff);
+//unsigned short Uart2_Receive(unsigned char *R_buff);
 void USART2_IRQHandler(void);
 void USART2_TX_IRQHandler(void);
 /********************************************************************************************************/

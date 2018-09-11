@@ -61,8 +61,8 @@ enum Start_Process_En   //启动流程
   
 struct BC95_Str//BC95 总结构体
 {
-  char R_Buffer[RECV_BUFF_SIZE];        //接收缓冲区
-  unsigned short RecvLength;         //接收长度
+//  char R_Buffer[RECV_BUFF_SIZE];        //接收缓冲区
+//  unsigned short RecvLength;         //接收长度
   enum Start_Process_En Start_Process;  //连接进程
   u8 Report_Bit;                        //发送位
   struct Error_Connter_Str Err_Conner; //错误计数
@@ -85,21 +85,15 @@ void BC95_Power_On(void);
 void BC95_Power_Off(void);
 void BC95_Reset(void);
 void BC95_Process(void);
-void BC95_Data_Send(unsigned char *Data,unsigned short Len);
 
 void BC95_Start(void);
-void BC95_Recv_Timeout_CallBack(void);
 void BC95_Recv_Timeout_CallBack(void);
 void BC95_Delay_CallBack(void);
 
 void Recv_Data_Process(unsigned char* buff);
-unsigned char Send_Data_Process(void);
-void ACK(u8 messageId,u8 errcode,u8 mid[4]);
-void Report_All_Parameters(void);
-void Report_HC_Flow(void);
 
 unsigned char Report_History_Data(void);
-
+void BC95_Data_Send(unsigned char *Data,unsigned short Len);
 /********************************************************************************/
 #endif
 

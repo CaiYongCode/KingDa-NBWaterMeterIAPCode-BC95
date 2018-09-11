@@ -71,6 +71,13 @@ void USART2_IRQHandler(void)                                                   /
       USART_ITConfig(USART2, USART_IT_IDLE, DISABLE);            //禁止总线空闲中断
     }    
   }
+  
+  //溢出中断
+  if(USART_GetITStatus(USART2,USART_IT_OR)!= RESET)
+  {
+    USART_ReceiveData8 (USART2);//接收数据
+  }
+  
   USART_ClearITPendingBit(USART2, USART_IT_RXNE);
   USART_ClearITPendingBit (USART2, USART_IT_IDLE);
 }
@@ -121,10 +128,7 @@ ErrorStatus Uart2_Send(unsigned char *Send_Data,unsigned short Send_Lenght)
   ErrorStatus err;  //定义返回值
   u16 i = 0;
   
-  if(Uart2.Send_Length == Uart2.Sent_Length)//如果已发送完成，强制发送空闲
-  {
-    Uart2.Send_Busy = FALSE;
-  }
+  Uart2.Send_Busy = FALSE;
 
   if(Uart2.Send_Busy == FALSE)                                  //检测是否忙
   {
@@ -157,21 +161,21 @@ ErrorStatus Uart2_Send(unsigned char *Send_Data,unsigned short Send_Lenght)
  Return:		    //
  Others:        //
 *********************************************************************************/
-unsigned short Uart2_Receive(unsigned char *R_buff)
-{
-  unsigned short R_Len,i;
-
-  if(Uart2.Receive_Pend != FALSE)
-  {
-    for(i=0;i<Uart2.Receive_Length;i++)
-      R_buff[i] = Uart2.R_Buffer[i];
-    Uart2.Receive_Pend = FALSE;
-    R_Len = Uart2.Receive_Length;
-  }
-  else
-    R_Len = 0;
-  return R_Len;
-}
+//unsigned short Uart2_Receive(unsigned char *R_buff)
+//{
+//  unsigned short R_Len,i;
+//
+//  if(Uart2.Receive_Pend != FALSE)
+//  {
+//    for(i=0;i<Uart2.Receive_Length;i++)
+//      R_buff[i] = Uart2.R_Buffer[i];
+//    Uart2.Receive_Pend = FALSE;
+//    R_Len = Uart2.Receive_Length;
+//  }
+//  else
+//    R_Len = 0;
+//  return R_Len;
+//}
 /*********************************************************************************
  Function:      //
  Description:   //
