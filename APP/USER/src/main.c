@@ -61,7 +61,6 @@ void main(void)
 
   BC95.Report_Bit = 1;
   BC95.Start_Process = BC95_RECONNECT;
-  
   while (1)
   {
 //    RTC_GetDate(RTC_Format_BIN, &RTC_DateStr);

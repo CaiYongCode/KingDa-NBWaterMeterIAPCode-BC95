@@ -128,7 +128,10 @@ ErrorStatus Uart2_Send(unsigned char *Send_Data,unsigned short Send_Lenght)
   ErrorStatus err;  //定义返回值
   u16 i = 0;
   
-  Uart2.Send_Busy = FALSE;
+//  if(Uart2.Sent_Length == Uart2.Send_Length)
+  {
+    Uart2.Send_Busy = FALSE;
+  }
 
   if(Uart2.Send_Busy == FALSE)                                  //检测是否忙
   {

@@ -62,7 +62,6 @@ ErrorStatus FlashWrite (void *pbuff, unsigned short length);
 void STM8_Interrupt_Vector_Table_Redirection(void);
 void JumptoAPP(void);
 
-void Upgrade_Process(void);
 void Upgrade_Recv_Process(unsigned char *str);
 void Upgrade_Send_Process(void);
 void SendUpgradeMessage19(void);

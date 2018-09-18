@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1021028906
+Checksum=-1642769259
 [CallStack]
 ShowArgs=0
 [Disassembly]
@@ -64,13 +64,6 @@ Fmt3={W}42:times	3	0
 LogEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
-[Breakpoints]
-Bp0=_ "STD_CODE" "{}.67.3" 0 0 0 0 "" 0 ""
-Bp1=_ "STD_CODE" "{}.99.3" 0 0 0 0 "" 0 ""
-Bp2=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.92.5" 1 0 0 0 "" 0 ""
-Bp3=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.662.5" 1 0 0 0 "" 0 ""
-Bp4=_ "STD_CODE" "{$PROJ_DIR$\..\IAP\src\IAP.c}.342.13" 1 0 0 0 "" 0 ""
-Count=5
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -78,6 +71,10 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Breakpoints]
+Bp0=_ "STD_CODE" "{}.67.3" 0 0 0 0 "" 0 ""
+Bp1=_ "STD_CODE" "{}.99.3" 0 0 0 0 "" 0 ""
+Count=2
 [Aliases]
 Count=0
 SuppressDialog=0

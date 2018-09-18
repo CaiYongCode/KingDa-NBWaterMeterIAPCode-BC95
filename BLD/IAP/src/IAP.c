@@ -219,37 +219,6 @@ void JumptoAPP(void)
   asm("LDW SP, X  ");
   asm("JPF $D000");
 }
-
-/*********************************************************************************
- Function:      //
- Description:   //升级流程
- Input:         //
-                //
- Output:        //
- Return:      	//
- Others:        //
-*********************************************************************************/
-void Upgrade_Process(void)
-{
-  char *str1 = NULL;
-  char *str2 = NULL;
-  str1 = strstr(Uart2.R_Buffer,",FFFE"); 
-  //处理消息粘包
-  while(str1 != NULL)
-  { 
-    str2 = strstr(str1+6,",FFFE"); 
-            
-    Upgrade_Recv_Process((unsigned char*)str1);
-
-    str1 = str2;
-  }
-  
-  Upgrade_Send_Process();
-  
-  memset(Uart2.R_Buffer,'\0',Uart2.Receive_Length);//清空接收缓冲区
-  Uart2.Receive_Length = 0;
-  Uart2.Receive_Pend = FALSE;
-}
 /*********************************************************************************
  Function:      //
  Description:   //升级接受流程
@@ -302,10 +271,6 @@ void Upgrade_Recv_Process(unsigned char *str)
     case MESSAGE19:            //查询设备版本
       {
         //+NNMI:8,FFFE01134C9A0000
-        if(Upgrade.Process >= MESSAGE19)
-        {
-          return;
-        }
         Upgrade.Process = MESSAGE19;
         Upgrade.Incident_Pend = TRUE; 
         Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
@@ -369,7 +334,8 @@ void Upgrade_Recv_Process(unsigned char *str)
           }
           else
           {
-            return;
+            Upgrade.Incident_Pend = TRUE;
+            Delete_Timer(Upgrade_TimeOut_CallBack);//删除升级超时回调  
           }
         }
       }
@@ -408,14 +374,12 @@ void Upgrade_Send_Process(void)
     case MESSAGE19:            //平台查询设备版本，设备响应
       { 
         SendUpgradeMessage19();
-        
         Create_Timer(ONCE,UPGRADE_TIMEROUT_TIME,
                      Upgrade_TimeOut_CallBack,0,PROCESS);//升级超时回调
       }
       break;
     case MESSAGE20:           //平台通知新版本，设备响应
-      {
-        SendUpgradeMessage20();  
+      {         
         if(Upgrade.ResultCode == 0x03)  //已经是最新版本
         {
           Upgrade.Process = IDLE;
@@ -423,7 +387,7 @@ void Upgrade_Send_Process(void)
         
           Upgrade.Incident_Pend = FALSE;
           Create_Timer(ONCE,2,
-                       BC95_Delay_CallBack,0,PROCESS);//延时2s
+                       MCU_DeInit,0,PROCESS);//延时2s
         }
         else if(Upgrade.ResultCode == 0x00)
         {
@@ -431,8 +395,10 @@ void Upgrade_Send_Process(void)
           Upgrade.Process = MESSAGE21;
           Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX; 
           Create_Timer(ONCE,2,
-                     Upgrade_Delay_CallBack,0,PROCESS);//延时2s请求第一包数据
+                       Upgrade_Delay_CallBack,0,PROCESS);//延时2s请求第一包数据
         }  
+        
+        SendUpgradeMessage20(); 
       } 
       break;
     case MESSAGE21:            //请求升级包
@@ -451,8 +417,6 @@ void Upgrade_Send_Process(void)
       break;
     case MESSAGE23:            //平台命令升级，设备响应
       {
-        SendUpgradeMessage23();
-
         //保存当前水量
         Save_Add_Flow(ADD_FLOW_ADD,&Cal.Water_Data);
         //保存升级信息
@@ -461,8 +425,10 @@ void Upgrade_Send_Process(void)
         //保存新版本
         Save_Version(APP_VERSION_ADD,Upgrade.Version);
         //跳转到应用程序
-        Create_Timer(ONCE,2,
+        Create_Timer(ONCE,5,
                      Run_APP,0,PROCESS);
+        
+        SendUpgradeMessage23();
       }
       break;
     case MESSAGE24:            //设备上报升级成功
@@ -693,14 +659,13 @@ void Upgrade_TimeOut_CallBack(void)
     Upgrade.TimeoutCounter--;
   }
   else
-  {
+  { 
     Upgrade.PackageNum = 0;          
     Upgrade.ProgramAddr = 0; 
     Upgrade.Process = IDLE;
     Save_Upgrade_Info();
-  
-    Upgrade.Incident_Pend = FALSE;
-    BC95.Incident_Pend = TRUE;
+
+    MCU_DeInit();
   }
   
 }

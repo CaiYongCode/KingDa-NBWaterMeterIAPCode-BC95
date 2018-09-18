@@ -154,7 +154,7 @@ void Wake_Interrupt (void)
     if(MeterParameter.DeviceStatus == RUN)
     {
       MeterParameter.DeviceRunTiming++;    
-      if( (MeterParameter.DeviceRunTiming/60) >= 10)
+      if( (MeterParameter.DeviceRunTiming/60) >= 15)
       {
          MCU_DeInit();
       }

@@ -92,7 +92,6 @@ void main(void)
     {
       Sys_Timer_Process();
       BC95_Process(); 
- //     Upgrade_Process();
     }
   }
 

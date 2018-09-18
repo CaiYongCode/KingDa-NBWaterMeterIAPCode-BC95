@@ -454,19 +454,23 @@ void Save_APP_Valid(void)
 *********************************************************************************/
 void Read_Upgrade_Info(void)
 {  
-  unsigned char i = 0; 
+ // unsigned char i = 0; 
   Upgrade.Process =(enum Upgrade_Process)(*((const unsigned char *)(Upgrade_Process_ADD)));
-  if(Upgrade.Process > MESSAGE24)
+  if(Upgrade.Process == MESSAGE24)
+  {
+    Upgrade.Incident_Pend = TRUE;
+    Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+  }
+  else
   {
     Upgrade.Process = IDLE;
   }
-  for(i = 0;i < 11;i++)
-  {
-    Upgrade.Version[i] = *((const unsigned char *)(UPGRADE_VERSION_ADD+i));
-  }
-  Upgrade.PackageSize = *((const unsigned char *)(UPGRADE_PACKAGE_SINGLE_SIZE));
-  Upgrade.PackageTotalNum = *((const unsigned char *)(UPGRADE_PACKAGE_TOTAL_NUMBER));
-  Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
+//  for(i = 0;i < 11;i++)
+//  {
+//    Upgrade.Version[i] = *((const unsigned char *)(UPGRADE_VERSION_ADD+i));
+//  }
+//  Upgrade.PackageSize = *((const unsigned short *)(UPGRADE_PACKAGE_SINGLE_SIZE));
+//  Upgrade.PackageTotalNum = *((const unsigned short *)(UPGRADE_PACKAGE_TOTAL_NUMBER));
 }
 /*********************************************************************************
  Function:      //
@@ -479,16 +483,16 @@ void Read_Upgrade_Info(void)
 *********************************************************************************/
 void Save_Upgrade_Info(void)
 {
-  //升级进行空闲，则清除升级信息
-  if(Upgrade.Process == IDLE)
-  {
-    memset(Upgrade.Version,'\0',11);
-    Upgrade.PackageSize = 0;
-    Upgrade.PackageTotalNum = 0;
-  }
+  //升级进程空闲，则清除升级信息
+//  if(Upgrade.Process == IDLE)
+//  {
+//    memset(Upgrade.Version,'\0',11);
+//    Upgrade.PackageSize = 0;
+//    Upgrade.PackageTotalNum = 0;
+//  }
   WriteRom (Upgrade_Process_ADD,&(Upgrade.Process),1);
-  WriteRom (UPGRADE_VERSION_ADD,Upgrade.Version,11);
-  WriteRom (UPGRADE_PACKAGE_SINGLE_SIZE,&(Upgrade.PackageSize),2);
-  WriteRom (UPGRADE_PACKAGE_TOTAL_NUMBER,&(Upgrade.PackageTotalNum),2);
+//  WriteRom (UPGRADE_VERSION_ADD,Upgrade.Version,11);
+//  WriteRom (UPGRADE_PACKAGE_SINGLE_SIZE,&(Upgrade.PackageSize),2);
+//  WriteRom (UPGRADE_PACKAGE_TOTAL_NUMBER,&(Upgrade.PackageTotalNum),2);
 }
 /******************************************END********************************************************/

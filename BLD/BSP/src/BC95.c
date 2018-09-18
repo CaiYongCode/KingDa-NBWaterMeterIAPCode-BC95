@@ -81,7 +81,7 @@ void BC95_Reset(void)
   GPIO_ResetBits(GPIOE,GPIO_Pin_1);     //复位脚拉高
   
   Create_Timer(ONCE,30,
-                     BC95_Start,0,PROCESS); 
+               BC95_Start,0,PROCESS); 
 }
 
 /*********************************************************************************
@@ -122,7 +122,8 @@ void BC95_Process(void)                         //BC95主进程
     {
       if(BC95.Reconnect_Times >= 3)  //重连超次数则睡眠
       {
-        BC95.Reconnect_Times = 0;       
+        BC95.Reconnect_Times = 0;  
+        BC95.FailTimes++;  
         MCU_DeInit(); 
       }
       else     //否则重连
@@ -233,25 +234,23 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case NMGS:                 //发送消息     
       { 
-        //优先处理升级事件
-        if(Upgrade.Process != IDLE)
+        //先执行上报，以保证联网成功
+        if(BC95.Report_Bit != 0)
         {
-          Upgrade_Send_Process();       //发送升级
+          Report_History_Data();          //发送数据
         }
         else
         {
-          if(BC95.Report_Bit != 0)
+          if(Upgrade.Process != IDLE)
           {
-            Report_History_Data();          //发送数据
-            Create_Timer(ONCE,5,
-                        BC95_Recv_Timeout_CallBack,0,PROCESS);
+            Upgrade_Send_Process();       //发送升级
           }
           else
           {
-            BC95.Start_Process = BC95_POWER_DOWN;
-            BC95.Incident_Pend = TRUE;//标记挂起
+            Create_Timer(ONCE,10,
+                         MCU_DeInit,0,PROCESS); //10s后关机
           }
-        }  
+        }
       }
       break;
     case BC95_CONNECT_ERROR:      //连接失败
@@ -439,12 +438,12 @@ void BC95_Process(void)                         //BC95主进程
           if(strnstr(str1,"+NNMI:4,AAAA0002",16) != NULL)     //上报历史数据的响应
           {
             BC95.Report_Bit = 0;
+            BC95.Incident_Pend = TRUE;//标记挂起
             Delete_Timer(BC95_Recv_Timeout_CallBack);//删除接收超时回调
-            Create_Timer(ONCE,10,
-                     BC95_Delay_CallBack,0,PROCESS); 
           }
           else if(strnstr(str1,",FFFE",16) != NULL)           //升级相关命令
-          {          
+          { 
+            Delete_Timer(MCU_DeInit);//删除超时回调
             Upgrade_Recv_Process((unsigned char*)str1);
           }
           

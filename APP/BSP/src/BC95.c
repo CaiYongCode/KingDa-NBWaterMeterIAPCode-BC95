@@ -51,7 +51,6 @@ void BC95_Power_On(void)        //BC95上电
   
   BC95.Start_Process = BC95_POWER_UP; 
   
-
   Create_Timer(ONCE,1,
                BC95_Reset,0,PROCESS); 
 }
@@ -82,7 +81,7 @@ void BC95_Reset(void)
   GPIO_ResetBits(GPIOE,GPIO_Pin_1);     //复位脚拉高
   
   Create_Timer(ONCE,30,
-                     BC95_Start,0,PROCESS); 
+               BC95_Start,0,PROCESS); 
 }
 
 /*********************************************************************************
@@ -238,14 +237,21 @@ void BC95_Process(void)                         //BC95主进程
       break;
     case NMGS:                 //发送消息     
       { 
-        //优先处理升级事件
-        if(Upgrade.Process != IDLE)
+        if(BC95.Report_Bit != 0)
         {
-          Upgrade_Send_Process();       //发送升级
+          Send_Data_Process();          //发送数据
         }
         else
         {
-          Send_Data_Process();          //发送数据
+          if(Upgrade.Process != IDLE)
+          {
+            Upgrade_Send_Process();       //发送升级
+          }
+          else
+          {
+            Create_Timer(ONCE,5,
+                         MCU_DeInit,0,PROCESS); //5s后关机
+          }
         }
       }
       break;
@@ -473,6 +479,7 @@ void BC95_Process(void)                         //BC95主进程
           } 
           else if(strnstr(str1,",FFFE",16) != NULL)           //升级相关命令
           {
+            Delete_Timer(MCU_DeInit);//删除超时回调
             Upgrade_Recv_Process((unsigned char*)str1);
           }
 
@@ -705,13 +712,6 @@ void Send_Data_Process(void)
   
   switch(BC95.Report_Bit)
   {
-    case 0:             //没有消息上报,则关机
-      {
-        BC95.FailTimes = 0;
-        BC95.Incident_Pend = TRUE;//标记挂起
-        BC95.Start_Process = BC95_POWER_DOWN;
-      }
-      break;
     case 1:            //发送全部参数
       {
         Report_All_Parameters();   
@@ -731,7 +731,8 @@ void Send_Data_Process(void)
         SendFlag = Report_History_Data();
         if(SendFlag == 0)
         {
-          BC95.Report_Bit = 0;
+          BC95.Report_Bit = 0;  
+          BC95.FailTimes = 0; 
           BC95.Incident_Pend = TRUE;
         }
         else

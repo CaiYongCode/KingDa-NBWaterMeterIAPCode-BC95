@@ -38,24 +38,30 @@ ShowSource=1
 [Simulator]
 Freq=16000000
 [DebugChecksum]
-Checksum=1345563885
+Checksum=1139428336
 [CallStack]
 ShowArgs=0
 [Disassembly]
 MixedMode=1
 [struct_types]
-Fmt0=struct Meter_Parameter_EN-SettleDate	3	0
-Fmt1=struct Meter_Parameter_EN-Temp	3	0
-Fmt2=struct Upgrade_Str-ResultCode	3	0
-Fmt3=struct Upgrade_Str-TimeoutCounter	3	0
+Fmt0=struct BC95_Str-ErrorRecord	3	0
+Fmt1=struct BC95_Str-FailTimes	3	0
+Fmt2=struct BC95_Str-Reconnect_Times	3	0
+Fmt3=struct BC95_Str-Report_Bit	3	0
+Fmt4=struct BC95_Str-Rssi	3	0
+Fmt5=struct History_Data_EN-ReadIndex	3	0
+Fmt6=struct History_Data_EN-SaveIndex	3	0
+Fmt7=struct Meter_Parameter_EN-SettleDate	3	0
+Fmt8=struct Meter_Parameter_EN-Temp	3	0
+Fmt9=struct Upgrade_Str-PackageNum	3	0
+Fmt10=struct Upgrade_Str-ResultCode	3	0
+Fmt11=struct Upgrade_Str-TimeoutCounter	3	0
 [watch_formats]
 Fmt0={W}42:APPValid	4	0
 [DataSample]
 LogEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
-[Breakpoints]
-Count=0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -63,6 +69,8 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
+[Breakpoints]
+Count=0
 [Aliases]
 Count=0
 SuppressDialog=0

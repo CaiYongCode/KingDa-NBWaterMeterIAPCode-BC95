@@ -198,7 +198,6 @@ void Alarm_Interrupt (void)
  Return:      	//
  Others:        //
 *********************************************************************************/
-//unsigned char on = 1;
 void Wake_Interrupt (void)                        
 {
   union flow_union Flow;
@@ -258,19 +257,6 @@ void Wake_Interrupt (void)
          MCU_DeInit();
       }
     }
-    
-//     if(on == 1)
-//    {
-// //     GPIO_SetBits(GPIOD,GPIO_Pin_6);   //G
-//      GPIO_SetBits(GPIOD,GPIO_Pin_7); //Y
-//      on = 0;
-//    }
-//    else
-//    {
-////      GPIO_ResetBits(GPIOD,GPIO_Pin_6);
-//      GPIO_ResetBits(GPIOD,GPIO_Pin_7);
-//      on = 1;
-//    }
     
     RTC_ClearITPendingBit(RTC_IT_WUT);                        //Çå³ýRTC»½ÐÑ±êÖ¾
   }
