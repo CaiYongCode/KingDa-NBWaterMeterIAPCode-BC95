@@ -53,7 +53,7 @@ void main(void)
   GPIO_Configuration();
   Rtc_Config();
   Pulse_Acquire_Config();
-//  IWDG_INIT(); 
+  IWDG_INIT(); 
   enableInterrupts();                                       //¿ª×ÜÖÐ¶Ï
 /////////////////////////////////////////////////////////    
   Read_Meter_Parameter();

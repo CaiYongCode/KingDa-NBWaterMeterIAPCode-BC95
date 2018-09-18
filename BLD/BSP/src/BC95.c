@@ -238,6 +238,8 @@ void BC95_Process(void)                         //BC95主进程
         if(BC95.Report_Bit != 0)
         {
           Report_History_Data();          //发送数据
+          Create_Timer(ONCE,BC95_R_TIMEROUT_TIME,
+                       BC95_Recv_Timeout_CallBack,0,PROCESS); 
         }
         else
         {

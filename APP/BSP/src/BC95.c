@@ -715,14 +715,14 @@ void Send_Data_Process(void)
     case 1:            //发送全部参数
       {
         Report_All_Parameters();   
-        Create_Timer(ONCE,5,
+        Create_Timer(ONCE,BC95_R_TIMEROUT_TIME,
                        BC95_Recv_Timeout_CallBack,0,PROCESS); 
       }
       break;
     case 2:            //发送历史累积流量
       {
         Report_HC_Flow();
-        Create_Timer(ONCE,5,
+        Create_Timer(ONCE,BC95_R_TIMEROUT_TIME,
                        BC95_Recv_Timeout_CallBack,0,PROCESS); 
       }
       break;
@@ -737,7 +737,7 @@ void Send_Data_Process(void)
         }
         else
         {
-          Create_Timer(ONCE,5,
+          Create_Timer(ONCE,BC95_R_TIMEROUT_TIME,
                        BC95_Recv_Timeout_CallBack,0,PROCESS); 
         }
       }

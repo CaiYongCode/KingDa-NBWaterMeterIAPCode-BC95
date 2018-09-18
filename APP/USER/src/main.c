@@ -47,7 +47,7 @@ void main(void)
   Set_Alarm();
   Pulse_Acquire_Config();
   
-//  IWDG_INIT(); 
+  IWDG_INIT(); 
   enableInterrupts();                                       //开总中断
 /////////////////////////////////////////////////////////    
   Check_Version();                                      //验证APP版本
