@@ -58,9 +58,9 @@ void main(void)
   Read_Meter_Parameter();                               //读取水表参数
   Read_History_Save_Index();                            //读取历史数据保存索引
   
+  BC95_Power_On();
 
-  BC95.Report_Bit = 1;
-  BC95.Start_Process = BC95_RECONNECT;
+  
   while (1)
   {
 //    RTC_GetDate(RTC_Format_BIN, &RTC_DateStr);

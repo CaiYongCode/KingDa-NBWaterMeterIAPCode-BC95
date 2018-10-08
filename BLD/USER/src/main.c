@@ -59,9 +59,9 @@ void main(void)
   Read_Meter_Parameter();
   Read_ACUM_Flow(ADD_FLOW_ADD,&Cal.Water_Data);         //读取当前累积水量
 
-  BC95.Report_Bit = 1;
-  BC95.Start_Process = BC95_RECONNECT;
+  BC95_Power_On();
 
+  
   while (1)
   {
 //    RTC_GetDate(RTC_Format_BIN, &RTC_DateStr);

@@ -458,7 +458,6 @@ void Read_Upgrade_Info(void)
   Upgrade.Process =(enum Upgrade_Process)(*((const unsigned char *)(Upgrade_Process_ADD)));
   if(Upgrade.Process == MESSAGE24)
   {
-    Upgrade.Incident_Pend = TRUE;
     Upgrade.TimeoutCounter = UPGRADE_TIMEOUT_MAX;
   }
   else

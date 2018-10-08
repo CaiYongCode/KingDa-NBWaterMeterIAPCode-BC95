@@ -1,26 +1,26 @@
-"F:\0中科君达\0项目\NB水表\IAP\APP\LIB\src\stm8l15x_iwdg.c"
+"F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\LIB\src\stm8l15x_iwdg.c"
 -std=c99
 -ferror-limit=100
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\PROJECT\..\BSP\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\PROJECT\..\BSP\inc
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\PROJECT\..\IAP\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\PROJECT\..\IAP\inc
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\PROJECT\..\LIB\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\PROJECT\..\LIB\inc
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\PROJECT\..\USER\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\PROJECT\..\USER\inc
 -I
 D:\IAR for STM8\stm8\inc
 -I
 D:\IAR for STM8\stm8\inc\c
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\BSP\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\BSP\inc
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\IAP\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\IAP\inc
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\LIB\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\LIB\inc
 -I
-F:\0中科君达\0项目\NB水表\IAP\APP\USER\inc
+F:\0中科君达\0项目\NB水表\IAP\NB-IOT_IAP程序(BC95-B5)\APP\USER\inc
 -D__CHAR_BITS__=8
 -D__CHAR_MAX__=0xff
 -D__CHAR_MIN__=0

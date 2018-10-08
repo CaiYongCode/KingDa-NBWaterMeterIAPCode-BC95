@@ -112,11 +112,10 @@ void Exti0_Interrupt (void)                        //外中断F
 {
   if(RESET == Weak_Up)
   {
-    BC95.Report_Bit= 1;
     if(BC95.Start_Process == BC95_POWER_DOWN)
     {
       MeterParameter.DeviceStatus = RUN;  
-      BC95.Start_Process = BC95_RECONNECT;    
+      BC95_Power_On();    
     }
   }
   EXTI_ClearITPendingBit (EXTI_IT_Pin0);            //清中断标志位
